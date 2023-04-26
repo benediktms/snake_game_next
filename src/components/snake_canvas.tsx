@@ -7,20 +7,21 @@ export const SnakeCanvas = () => {
   const { wasm } = useContext(WASMContext);
   const ref = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    if (!wasm) {
-      return;
-    }
-    const CELL_SIZE = 20;
-    const WORLD_SIZE_SQRT = 8;
+  const CELL_SIZE = 20;
+  const WORLD_SIZE_SQRT = 8;
 
-    const world = wasm.World.new(WORLD_SIZE_SQRT, WORLD_SIZE_SQRT);
+  useEffect(() => {
+    if (!wasm) return;
+
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
 
-    if (!ctx || !canvas) {
-      return;
-    }
+    if (!ctx || !canvas) return;
+
+    const { Ticker, World } = wasm;
+
+    const ticker = new Ticker();
+    const world = new World(WORLD_SIZE_SQRT, WORLD_SIZE_SQRT);
 
     canvas.width = WORLD_SIZE_SQRT * CELL_SIZE;
     canvas.height = WORLD_SIZE_SQRT * CELL_SIZE;
@@ -53,8 +54,6 @@ export const SnakeCanvas = () => {
       const col = headIdx % WORLD_SIZE_SQRT;
       const row = Math.floor(headIdx / WORLD_SIZE_SQRT);
 
-      console.log({ headIdx, col, row });
-
       ctx.beginPath();
       ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
       ctx.stroke();
@@ -62,13 +61,18 @@ export const SnakeCanvas = () => {
 
     drawWorld(ctx);
     drawSnake(ctx);
+
+    setInterval(() => {
+      drawWorld(ctx);
+      drawSnake(ctx);
+    }, ticker.delta());
   }, [wasm]);
 
   return (
     <div className="m-10 flex flex-col">
       <h2 className="text-center text-3xl">snake</h2>
       <div className="mt-4 flex justify-center">
-        <canvas ref={ref}></canvas>
+        <canvas ref={ref} onKeyDown={(e) => console.log(e.code)}></canvas>
       </div>
     </div>
   );
